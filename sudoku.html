@@ -28,6 +28,54 @@
             fill: black;
             text-anchor: middle;
         }
+        .info {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            width: 320px;
+            padding: 12px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: start;
+            background: #509AF8;
+            border-radius: 8px;
+            box-shadow: 0px 0px 5px -3px #111;
+
+            /* 新增固定到頁面頂部 */
+            position: fixed;
+            top: 3%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000; /* 確保在其他內容上方 */
+        }
+
+        .info__icon {
+            width: 20px;
+            height: 20px;
+            transform: translateY(-2px);
+            margin-right: 8px;
+        }
+
+        .info__icon path {
+            fill: #fff;
+        }
+
+        .info__title {
+            font-weight: 500;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .info__close {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .info__close path {
+            fill: #fff;
+        }
+
     </style>
 </head>
 <body>
@@ -35,6 +83,13 @@
         <svg width="100%" height="100%" viewBox="0 0 500 500" aria-label="5 concentric circles with divisions">
             <!-- SVG content will be dynamically added here -->
         </svg>
+    </div>
+    <div class="info">
+        <div class="info__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" height="24" fill="none"><path fill="#393a37" d="m12 1.5c-5.79844 0-10.5 4.70156-10.5 10.5 0 5.7984 4.70156 10.5 10.5 10.5 5.7984 0 10.5-4.7016 10.5-10.5 0-5.79844-4.7016-10.5-10.5-10.5zm.75 15.5625c0 .1031-.0844.1875-.1875.1875h-1.125c-.1031 0-.1875-.0844-.1875-.1875v-6.375c0-.1031.0844-.1875.1875-.1875h1.125c.1031 0 .1875.0844.1875.1875zm-.75-8.0625c-.2944-.00601-.5747-.12718-.7808-.3375-.206-.21032-.3215-.49305-.3215-.7875s.1155-.57718.3215-.7875c.2061-.21032.4864-.33149.7808-.3375.2944.00601.5747.12718.7808.3375.206.21032.3215.49305.3215.7875s-.1155.57718-.3215.7875c-.2061.21032-.4864.33149-.7808.3375z"></path></svg>
+        </div>
+        <div class="info__title" id="question-num">當前設定的題目數量為0</div>
+        <div class="info__close"><svg height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m15.8333 5.34166-1.175-1.175-4.6583 4.65834-4.65833-4.65834-1.175 1.175 4.65833 4.65834-4.65833 4.6583 1.175 1.175 4.65833-4.6583 4.6583 4.6583 1.175-1.175-4.6583-4.6583z" fill="#393a37"></path></svg></div>
     </div>
 
 
@@ -53,6 +108,13 @@
                 q[i].push([...Array(8).keys()].map(x => x + 1)); // 加入 1~8 的陣列
             }
         }
+
+        const temp={
+            //"i-ja":[] //can't input
+        }
+
+        let question = 0;
+        const questionNumDiv = document.getElementById('question-num');
 
         const colorBar = [];
         for (let i=0;i<=numDivisions;i++){
@@ -73,11 +135,14 @@
 
 
         function changeColor(i, j, num, path) {
+            question++;
+            questionNumDiv.textContent = `當前設定的題目數量為${question}`;
             const z = (i+4)%numDivisions;
             
             // 更新當前分區的數字
             if (num !== null) {
                 q[i][j] = [num]; // 將當前分區設置為唯一的數字
+                temp[`${i}-${j}`]=[];
             } else {
                 q[i][j] = []; // 如果 num 為 null，清空該分區
             }
@@ -87,27 +152,51 @@
             for(let x=0;x<numCircles-1;x++){
                 if(x!==j){
                     const index = q[i][x].indexOf(num);
-                    if (index !== -1) q[i][x].splice(index, 1); // 刪除該數字
-                    const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
-                    if (otherPath) updateColor(i, x, otherPath); // 更新顏色
+                    if (index !== -1){
+                        q[i][x].splice(index, 1); // 刪除該數字
+                        const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
+                        if (otherPath) updateColor(i, x, otherPath); // 更新顏色
+                    }else{
+                        if(temp[`${i}-${x}`]){
+                            temp[`${i}-${x}`].push(num);
+                        }else{
+                            temp[`${i}-${x}`]=[num];
+                        }
+                    }
                 }
             }
 
             for(let x=0;x<numCircles-1;x++){
                 if(x!==j){
                     const index = q[z][x].indexOf(num);
-                    if (index !== -1) q[z][x].splice(index, 1); // 刪除該數字
-                    const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
-                    if (otherPath) updateColor(z, x, otherPath); // 更新顏色
+                    if (index !== -1){
+                        q[z][x].splice(index, 1); // 刪除該數字
+                        const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
+                        if (otherPath) updateColor(z, x, otherPath); // 更新顏色
+                    }else{
+                        if(temp[`${z}-${x}`]){
+                            temp[`${z}-${x}`].push(num);
+                        }else{
+                            temp[`${z}-${x}`]=[num];
+                        }
+                    }
                 }
             }
             
             for (let y = 0; y < numDivisions; y++) {
                 if (y !== i) {
                     const index = q[y][j].indexOf(num);
-                    if (index !== -1) q[y][j].splice(index, 1); // 刪除該數字
-                    const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
-                    if (otherPath) updateColor(y, j, otherPath); // 更新顏色
+                    if (index !== -1){
+                        q[y][j].splice(index, 1); // 刪除該數字
+                        const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
+                        if (otherPath) updateColor(y, j, otherPath); // 更新顏色
+                    }else{
+                        if(temp[`${y}-${j}`]){
+                            temp[`${y}-${j}`].push(num);
+                        }else{
+                            temp[`${y}-${j}`]=[num];
+                        }
+                    }
                 }
             }
             
@@ -116,37 +205,58 @@
         }
 
         function resetColor(i, j, path) {
+            question--;
+            questionNumDiv.textContent = `當前設定的題目數量為${question}`;
             if (q[i][j][0].length>1){
                 return;
             }
             const z = (i+4)%numDivisions;
             const num = q[i][j][0];
             
-            q[i][j]=[...Array(8).keys()].map(x => x + 1);
+            q[i][j]=[...Array(8).keys()].map(x => x + 1).filter(item => !temp[`${i}-${j}`].includes(item));
             updateColor(i, j, path); // 更新當前分區的顏色
+            console.log(`in line 127,clear i:${i} j:${j}`);
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
                 if(x!==j){
-                    q[i][x].push(num);
-                    const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
-                    if (otherPath) updateColor(i, x, otherPath); // 更新顏色
+                    const index = q[i][x].indexOf(num);
+                    if(index===-1){
+                        q[i][x].push(num);
+                        const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
+                        if (otherPath) updateColor(i, x, otherPath); // 更新顏色
+                    }else{
+                        const tempIndex = temp[`${i}-${x}`].indexOf(num);
+                        temp[`${i}-${x}`].splice(tempIndex,1);
+                    }
                 }
             }
 
             for(let x=0;x<numCircles-1;x++){
                 if(x!==j){
-                    q[z][x].push(num);
-                    const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
-                    if (otherPath) updateColor(z, x, otherPath); // 更新顏色
+                    const index = q[z][x].indexOf(num);
+                    if(index===-1){
+                        q[z][x].push(num);
+                        const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
+                        if (otherPath) updateColor(z, x, otherPath); // 更新顏色
+                    }else{
+                        const tempIndex = temp[`${z}-${x}`].indexOf(num);
+                        temp[`${z}-${x}`].splice(tempIndex,1);
+                    }
                 }
             }
             
             for (let y = 0; y < numDivisions; y++) {
                 if (y !== i) {
-                    q[y][j].push(num);
-                    const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
-                    if (otherPath) updateColor(y, j, otherPath); // 更新顏色
+                    const index = q[y][j].indexOf(num);
+                    if(index===-1){
+                        q[y][j].push(num);
+                        const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
+                        if (otherPath) updateColor(y, j, otherPath); // 更新顏色
+                    }else{
+                        const tempIndex = temp[`${y}-${j}`].indexOf(num);
+                        temp[`${y}-${j}`].splice(tempIndex,1);
+                    }
                 }
             }
             
@@ -217,12 +327,21 @@
                 path.classList.add('section');
                 path.setAttribute('data-index', `${i}-${ja}`);
                 path.addEventListener('click', () => {
-                    const model = prompt("請輸入1或2(1:將此格設定為指定數字, 2:將此格從題目列表中移除)");
-                    if (model === "1") {
-                        const number = parseInt(prompt(`請輸入數字 1~${numDivisions}`));
-                        changeColor(i, ja, number, path);
-                    } else if (model === "2") {
-                        changeColor(i, ja, path);
+                    
+                    if(q[i][ja].length === 1){
+                        const model = parseInt(prompt(`本格為固定數字（題目）:${q[i][ja][0]}\n輸入1可清除題目`));
+                        if (model===1){
+                            resetColor(i,ja,path);
+                        }
+                    }else{
+                        const number = parseInt(prompt(`第${i}區第${ja}層可填入的數字為${q[i][ja]}`));
+                        if(!number) return;
+                        if (q[i][ja].includes(number)){
+                            changeColor(i, ja, number, path);
+                        }else{
+
+                            alert(`${number}不在可用數字列表中`);
+                        }
                     }
                 });
 
