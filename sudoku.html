@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5 Concentric Circles with Innermost Circle Undivided</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .circle-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+        .section:hover {
+            fill: #e0e0e0;
+            transition: fill 0.3s ease;
+        }
+        text {
+            font-size: 12px;
+            fill: black;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="circle-container">
+        <svg width="100%" height="100%" viewBox="0 0 500 500" aria-label="5 concentric circles with divisions">
+            <!-- SVG content will be dynamically added here -->
+        </svg>
+    </div>
+
+
+    <script>
+        const svg = document.querySelector('svg');
+        const centerX = 250;
+        const centerY = 250;
+        const numCircles = 5; // Total number of circles
+        const numDivisions = 8; // Total number of divisions per circle
+
+        const q = []; // 創建空陣列
+
+        for (let i = 0; i < 8; i++) {
+            q.push([]); // 每層加上一個空子陣列
+            for (let j = 0; j < 4; j++) {
+                q[i].push([...Array(8).keys()].map(x => x + 1)); // 加入 1~8 的陣列
+            }
+        }
+
+        const colorBar = [];
+        for (let i=0;i<=numDivisions;i++){
+            const t = i/numDivisions;
+            const r = Math.round(255 * (1 - t)); // 紅色值，從 255 遞減到 0
+            const g = Math.round(255 * t);       // 綠色值，從 0 遞增到 255
+            const b = 0; // 藍色固定為 0
+            colorBar.push(`rgb(${r}, ${g}, ${b})`)
+        }
+
+        function updateColor(i, j, path) {
+            const length = q[i][j].length;
+            const colorIndex = Math.min(length, colorBar.length - 1); // 避免超出顏色範圍
+            const color = colorBar[numDivisions - colorIndex];
+            path.setAttribute('fill', color); // 更新填充顏色
+        }
+
+
+
+        function changeColor(i, j, num, path) {
+            const z = (i+4)%numDivisions;
+            
+            // 更新當前分區的數字
+            if (num !== null) {
+                q[i][j] = [num]; // 將當前分區設置為唯一的數字
+            } else {
+                q[i][j] = []; // 如果 num 為 null，清空該分區
+            }
+            updateColor(i, j, path); // 更新當前分區的顏色
+
+            // 更新同列其他分區
+            for(let x=0;x<numCircles-1;x++){
+                if(x!==j){
+                    const index = q[i][x].indexOf(num);
+                    if (index !== -1) q[i][x].splice(index, 1); // 刪除該數字
+                    const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
+                    if (otherPath) updateColor(i, x, otherPath); // 更新顏色
+                }
+            }
+
+            for(let x=0;x<numCircles-1;x++){
+                if(x!==j){
+                    const index = q[z][x].indexOf(num);
+                    if (index !== -1) q[z][x].splice(index, 1); // 刪除該數字
+                    const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
+                    if (otherPath) updateColor(z, x, otherPath); // 更新顏色
+                }
+            }
+            
+            for (let y = 0; y < numDivisions; y++) {
+                if (y !== i) {
+                    const index = q[y][j].indexOf(num);
+                    if (index !== -1) q[y][j].splice(index, 1); // 刪除該數字
+                    const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
+                    if (otherPath) updateColor(y, j, otherPath); // 更新顏色
+                }
+            }
+            
+            
+            
+        }
+
+        function resetColor(i, j, path) {
+            if (q[i][j][0].length>1){
+                return;
+            }
+            const z = (i+4)%numDivisions;
+            const num = q[i][j][0];
+            
+            q[i][j]=[...Array(8).keys()].map(x => x + 1);
+            updateColor(i, j, path); // 更新當前分區的顏色
+
+            // 更新同列其他分區
+            for(let x=0;x<numCircles-1;x++){
+                if(x!==j){
+                    q[i][x].push(num);
+                    const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
+                    if (otherPath) updateColor(i, x, otherPath); // 更新顏色
+                }
+            }
+
+            for(let x=0;x<numCircles-1;x++){
+                if(x!==j){
+                    q[z][x].push(num);
+                    const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
+                    if (otherPath) updateColor(z, x, otherPath); // 更新顏色
+                }
+            }
+            
+            for (let y = 0; y < numDivisions; y++) {
+                if (y !== i) {
+                    q[y][j].push(num);
+                    const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
+                    if (otherPath) updateColor(y, j, otherPath); // 更新顏色
+                }
+            }
+            
+            
+            
+        }
+
+        // 大寫字母標籤 (圈數)
+        const circleLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+        // 小寫字母標籤 (分區)
+        const divisionLabels = "abcdefghijklmnopqrstuvwxyz".split("");
+
+        // 創建圓
+        for (let i = 0; i < numCircles; i++) {
+            const radius = (i + 1) * 50;
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', centerX);
+            circle.setAttribute('cy', centerY);
+            circle.setAttribute('r', radius);
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', 'black');
+            svg.appendChild(circle);
+        }
+
+        // 創建分區與標籤
+        for (let i = 0; i < numDivisions; i++) {
+            const angle = (i * 360 / numDivisions);
+            const radians = angle * Math.PI / 180;
+            const x = centerX + Math.cos(radians) * 250;
+            const y = centerY + Math.sin(radians) * 250;
+
+            // 繪製分隔線 (從第二層開始)
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', centerX + Math.cos(radians) * 50);
+            line.setAttribute('y1', centerY + Math.sin(radians) * 50);
+            line.setAttribute('x2', x);
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', 'black');
+            svg.appendChild(line);
+
+            for (let j = 1; j < numCircles; j++) { // 從第二層開始 (j = 1)
+                const ja = j-1;
+                const innerRadius = j * 50;
+                const outerRadius = (j + 1) * 50;
+
+                // 計算扇形中心座標
+                const avgRadius = (innerRadius + outerRadius) / 2;
+                const avgAngle = (angle + (i + 1) * 360 / numDivisions) / 2;
+                const avgRadians = avgAngle * Math.PI / 180;
+
+                const textX = centerX + Math.cos(avgRadians) * avgRadius;
+                const textY = centerY + Math.sin(avgRadians) * avgRadius;
+
+                // 創建扇形路徑
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = [
+                    `M ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
+                    `L ${centerX + Math.cos(radians) * outerRadius} ${centerY + Math.sin(radians) * outerRadius}`,
+                    `A ${outerRadius} ${outerRadius} 0 0 1 ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius}`,
+                    `L ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius}`,
+                    `A ${innerRadius} ${innerRadius} 0 0 0 ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
+                    'Z'
+                ].join(' ');
+
+                path.setAttribute('d', d);
+                path.setAttribute('fill', colorBar[0]);
+                path.setAttribute('stroke', 'none');
+                path.classList.add('section');
+                path.setAttribute('data-index', `${i}-${ja}`);
+                path.addEventListener('click', () => {
+                    const model = prompt("請輸入1或2(1:將此格設定為指定數字, 2:將此格從題目列表中移除)");
+                    if (model === "1") {
+                        const number = parseInt(prompt(`請輸入數字 1~${numDivisions}`));
+                        changeColor(i, ja, number, path);
+                    } else if (model === "2") {
+                        changeColor(i, ja, path);
+                    }
+                });
+
+
+                svg.appendChild(path);
+
+                // 添加標籤
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.textContent = `${circleLabels[j - 1]}${divisionLabels[i]}\n${i} ${ja}`;
+                svg.appendChild(text);
+            }
+        }
+    </script>
+</body>
+</html>
