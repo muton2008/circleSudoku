@@ -327,8 +327,8 @@
                 path.classList.add('section');
                 path.setAttribute('data-index', `${i}-${ja}`);
                 path.addEventListener('click', () => {
-                    
-                    if(q[i][ja].length === 1){
+
+                    if(temp[`${i}-${ja}`]){
                         const model = parseInt(prompt(`本格為固定數字（題目）:${q[i][ja][0]}\n輸入1可清除題目`));
                         if (model===1){
                             resetColor(i,ja,path);
