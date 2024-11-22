@@ -157,7 +157,7 @@
                         const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
                         if (otherPath) updateColor(i, x, otherPath); // 更新顏色
                     }else{
-                        if(q[i][x].length!=1) return
+                        if(q[i][x].length!==1) continue
                         if(temp[`${i}-${x}`]){
                             temp[`${i}-${x}`].push(num);
                         }else{
@@ -175,7 +175,7 @@
                         const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
                         if (otherPath) updateColor(z, x, otherPath); // 更新顏色
                     }else{
-                        if(q[z][x].length!=1) return
+                        if(q[z][x].length!==1) continue
                         if(temp[`${z}-${x}`]){
                             temp[`${z}-${x}`].push(num);
                         }else{
@@ -193,7 +193,7 @@
                         const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
                         if (otherPath) updateColor(y, j, otherPath); // 更新顏色
                     }else{
-                        if(q[y][j].length!=1) return
+                        if(q[y][j].length!==1) continue
                         if(temp[`${y}-${j}`]){
                             temp[`${y}-${j}`].push(num);
                         }else{
@@ -218,6 +218,7 @@
             
             q[i][j]=[...Array(8).keys()].map(x => x + 1).filter(item => !temp[`${i}-${j}`].includes(item));
             updateColor(i, j, path); // 更新當前分區的顏色
+            q[i][j].sort()
             console.log(`in line 127,clear i:${i} j:${j}`);
             delete temp[`${i}-${j}`];
 
