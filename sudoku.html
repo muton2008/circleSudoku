@@ -101,6 +101,7 @@
         const numDivisions = 8; // Total number of divisions per circle
 
         const q = []; // 創建空陣列
+        const Q = [];
 
         for (let i = 0; i < 8; i++) {
             q.push([]); // 每層加上一個空子陣列
@@ -146,6 +147,7 @@
                 q[i][j] = []; // 如果 num 為 null，清空該分區
             }
             updateColor(i, j, path); // 更新當前分區的顏色
+            Q.push([i,j]);
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
@@ -227,9 +229,6 @@
         }
 
         function resetColor(i, j, path) {
-            const completed = [];
-
-            completed.push([i,j]);
             question--;
             questionNumDiv.textContent = `當前設定的題目數量為${question}`;
             if (q[i][j][0].length>1){
@@ -250,13 +249,15 @@
             });
             updateColor(i, j, path); // 更新當前分區的顏色
             console.log(`in line 127,clear i:${i} j:${j}`);
+            const index = Q.findIndex(item => item[0]===i && item[1]===j);
+            if (index!==-1){
+                Q.splice(index,1);
+            }
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
-                if (completed.includes([i,x])) continue;
                 if(x!==j){
                     const index = q[i][x].indexOf(num);
-                    completed.push([i,x]);
                     if(index===-1){
                         q[i][x].push(num);
                         q[i][x].sort((a,b) => a-b);
@@ -375,7 +376,7 @@
                 path.setAttribute('data-index', `${i}-${ja}`);
                 path.addEventListener('click', () => {
 
-                    if(q[i][ja].length===1){
+                    if(Q.some(item => item[0]===i && item[1]===ja)){
                         const model = parseInt(prompt(`本格為固定數字（題目）:${q[i][ja][0]}\n輸入1可清除題目`));
                         if (model===1){
                             resetColor(i,ja,path);
