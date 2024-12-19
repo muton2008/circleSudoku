@@ -139,6 +139,7 @@
             question++;
             questionNumDiv.textContent = `當前設定的題目數量為${question}`;
             const z = (i+4)%numDivisions;
+            const completed = [];
             
             // 更新當前分區的數字
             if (num !== null) {
@@ -148,10 +149,12 @@
             }
             updateColor(i, j, path); // 更新當前分區的顏色
             Q.push([i,j]);
+            completed.push([i,j]);
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
-                if(x!==j){
+                if(!completed.some(item => item[0]===i && item[1]===x)){
+                    completed.push([i,x]);
                     const index = q[i][x].indexOf(num);
                     if (index !== -1){
                         q[i][x].splice(index, 1); // 刪除該數字
@@ -167,9 +170,6 @@
                             }
                             else{
                                 temp[`${i}-${x}`][num] = 1;
-                                if (temp[`${i}-${x}`][num]===0){
-                                    delete temp[`${i}-${x}`][num];
-                                }
                             }
                         }
                     }
@@ -177,7 +177,8 @@
             }
 
             for(let x=0;x<numCircles-1;x++){
-                if(x!==j){
+                if(!completed.some(item => item[0]===z && item[1]===x)){
+                    completed.push([z,x]);
                     const index = q[z][x].indexOf(num);
                     if (index !== -1){
                         q[z][x].splice(index, 1); // 刪除該數字
@@ -192,9 +193,6 @@
                             }
                             else{
                                 temp[`${z}-${x}`][num] = 1;
-                                if (temp[`${z}-${x}`][num]===0){
-                                    delete temp[`${z}-${x}`][num];
-                                }
                             }
                         }
                     }
@@ -202,7 +200,8 @@
             }
             
             for (let y = 0; y < numDivisions; y++) {
-                if (y !== i) {
+                if (!completed.some(item => item[0]===y && item[1]===j)){
+                    completed.push([y,j]);
                     const index = q[y][j].indexOf(num);
                     if (index !== -1){
                         q[y][j].splice(index, 1); // 刪除該數字
@@ -218,9 +217,6 @@
                             }
                             else{
                                 temp[`${y}-${j}`][num] = 1;
-                                if(temp[`${y}-${j}`][num]===0){
-                                    delete temp[`${y}-${j}`][num];
-                                }
                             }
                         }
                     }
@@ -231,9 +227,11 @@
         function resetColor(i, j, path) {
             question--;
             questionNumDiv.textContent = `當前設定的題目數量為${question}`;
-            if (q[i][j][0].length>1){
+            if (q[i][j].length>1){
+                console.log(`error! i:${i} j:${j}`);
                 return;
             }
+            const completed = [];
             const z = (i+4)%numDivisions;
             const num = q[i][j][0];
             let keys = [] ;
@@ -241,69 +239,67 @@
                 keys = Object.keys(temp[`${i}-${j}`]);
             }
             q[i][j]=[...Array(8).keys()].map(x => x + 1).filter(item => !keys.includes(item.toString()));
-            keys.forEach(item => {
-                temp[`${i}-${j}`][item]--;
-                if (temp[`${i}-${j}`][item]===0){
-                    delete temp[`${i}-${j}`][item];
-                }
-            });
+
             updateColor(i, j, path); // 更新當前分區的顏色
             console.log(`in line 127,clear i:${i} j:${j}`);
             const index = Q.findIndex(item => item[0]===i && item[1]===j);
             if (index!==-1){
+                console.log(`in line 130,clear i:${i} j:${j},index:${index}`);
                 Q.splice(index,1);
+            }else{
+                console.log(`in line 132,can't find i:${i} j:${j}`);
             }
+            completed.push([i,j]);
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
-                if(x!==j){
-                    const index = q[i][x].indexOf(num);
-                    if(index===-1){
-                        q[i][x].push(num);
-                        q[i][x].sort((a,b) => a-b);
-                        const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
-                        if (otherPath) updateColor(i, x, otherPath); // 更新顏色
-                    }else{
+                if(!completed.some(item => item[0]===i && item[1]===x)){
+                    completed.push([i,x]);
+                    const stored = Boolean(temp[`${i}-${x}`] && temp[`${i}-${x}`][num]);
+                    if (stored){
                         temp[`${i}-${x}`][num]--;
                         if (temp[`${i}-${x}`][num]===0){
                             delete temp[`${i}-${x}`][num];
                         }
+                    }else{
+                        q[i][x].push(num);
+                        q[i][x].sort((a,b) => a-b);
+                        updateColor(i, x, document.querySelector(`[data-index="${i}-${x}"]`)); // 更新顏色   
                     }
                 }
             }
 
             for(let x=0;x<numCircles-1;x++){
-                if(x!==j){
-                    const index = q[z][x].indexOf(num);
-                    if(index===-1){
-                        q[z][x].push(num);
-                        q[z][x].sort((a,b) => a-b);
-                        const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
-                        if (otherPath) updateColor(z, x, otherPath); // 更新顏色
-                    }else{
+                if(!completed.some(item => item[0]===z && item[1]===x)){
+                    completed.push([z,x]);
+                    const stored = Boolean(temp[`${z}-${x}`] && temp[`${z}-${x}`][num]);
+                    if (stored){
                         temp[`${z}-${x}`][num]--;
                         if (temp[`${z}-${x}`][num]===0){
                             delete temp[`${z}-${x}`][num];
                         }
+                    }else{
+                        q[z][x].push(num);
+                        q[z][x].sort((a,b) => a-b);
+                        updateColor(z, x, document.querySelector(`[data-index="${z}-${x}"]`)); // 更新顏色   
                     }
                 }
                 
             }
             
             for (let y = 0; y < numDivisions; y++) {
-                if (y !== i) {
-                    const index = q[y][j].indexOf(num);
-                    if(index===-1){
-                        q[y][j].push(num);
-                        q[y][j].sort((a,b) => a-b);
-                        const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
-                        if (otherPath) updateColor(y, j, otherPath); // 更新顏色
-                    }else{
-                        console.log(`in line 169,${y}-${j}`);
+                if (!completed.some(item => item[0]===y && item[1]===j)){
+                    completed.push([y,j]);
+                    const stored = Boolean(temp[`${y}-${j}`] && temp[`${y}-${j}`][num]);
+                    if (stored){
                         temp[`${y}-${j}`][num]--;
                         if (temp[`${y}-${j}`][num]===0){
                             delete temp[`${y}-${j}`][num];
                         }
+                    }else{
+                        q[y][j].push(num);
+                        q[y][j].sort((a,b) => a-b);
+                        updateColor(y, j, document.querySelector(`[data-index="${y}-${j}"]`)); // 更新顏色
                     }
                 }
             }
