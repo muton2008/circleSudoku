@@ -100,21 +100,16 @@
         const numCircles = 5; // Total number of circles
         const numDivisions = 8; // Total number of divisions per circle
 
-        const q = []; // 創建空陣列
-        const Q = [];
+        const q = [];
+        const Q = {};   //{"i-j":num}
 
         for (let i = 0; i < 8; i++) {
             q.push([]); // 每層加上一個空子陣列
             for (let j = 0; j < 4; j++) {
-                q[i].push([...Array(8).keys()].map(x => x + 1)); // 加入 1~8 的陣列
+                q[i].push(Object.assign({}, ...[...Array(8).keys()].map(x => ({[x + 1]: 0}))));
             }
         }
 
-        const temp={
-            //"i-ja":{num:again is number} //can't input
-        }
-
-        let question = 0;
         const questionNumDiv = document.getElementById('question-num');
 
         const colorBar = [];
@@ -127,7 +122,7 @@
         }
 
         function updateColor(i, j, path) {
-            const length = q[i][j].length;
+            const length = Object.values(q[i][j]).filter(value => value === 0).length;
             const colorIndex = Math.min(length, colorBar.length - 1); // 避免超出顏色範圍
             const color = colorBar[numDivisions - colorIndex];
             path.setAttribute('fill', color); // 更新填充顏色
@@ -136,153 +131,77 @@
 
 
         function changeColor(i, j, num, path) {
-            question++;
-            questionNumDiv.textContent = `當前設定的題目數量為${question}`;
+            questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
             const z = (i+4)%numDivisions;
             const completed = [];
             
             // 更新當前分區的數字
-            if (num !== null) {
-                q[i][j] = [num]; // 將當前分區設置為唯一的數字
-            } else {
-                q[i][j] = []; // 如果 num 為 null，清空該分區
+            for (const key in q[i][j]) {
+                if (key != num) {
+                    q[i][j][key]++;
+                }
             }
             updateColor(i, j, path); // 更新當前分區的顏色
-            Q.push([i,j]);
+            Q[`${i}-${j}`] = num;
             completed.push([i,j]);
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
                 if(!completed.some(item => item[0]===i && item[1]===x)){
                     completed.push([i,x]);
-                    const index = q[i][x].indexOf(num);
-                    if (index !== -1){
-                        q[i][x].splice(index, 1); // 刪除該數字
-                        const otherPath = document.querySelector(`[data-index="${i}-${x}"]`);
-                        if (otherPath) updateColor(i, x, otherPath); // 更新顏色
-                    }else{
-                        if(!temp[`${i}-${x}`]){
-                            temp[`${i}-${x}`]={[num]:1};
-                        }
-                        else{
-                            if(temp[`${i}-${x}`][num]){
-                                temp[`${i}-${x}`][num]++;
-                            }
-                            else{
-                                temp[`${i}-${x}`][num] = 1;
-                            }
-                        }
-                    }
+                    q[i][x][num]++;
+                    updateColor(i, x, document.querySelector(`[data-index="${i}-${x}"]`)); // 更新顏色
                 }
             }
 
             for(let x=0;x<numCircles-1;x++){
                 if(!completed.some(item => item[0]===z && item[1]===x)){
                     completed.push([z,x]);
-                    const index = q[z][x].indexOf(num);
-                    if (index !== -1){
-                        q[z][x].splice(index, 1); // 刪除該數字
-                        const otherPath = document.querySelector(`[data-index="${z}-${x}"]`);
-                        if (otherPath) updateColor(z, x, otherPath); // 更新顏色
-                    }else{
-                        if(!temp[`${z}-${x}`]){
-                            temp[`${z}-${x}`]={[num]:1};
-                        }else{
-                            if(temp[`${z}-${x}`][num]){
-                                temp[`${z}-${x}`][num]++;
-                            }
-                            else{
-                                temp[`${z}-${x}`][num] = 1;
-                            }
-                        }
-                    }
+                    q[z][x][num]++;
+                    updateColor(z, x, document.querySelector(`[data-index="${z}-${x}"]`)); // 更新顏色
                 }
             }
             
             for (let y = 0; y < numDivisions; y++) {
                 if (!completed.some(item => item[0]===y && item[1]===j)){
                     completed.push([y,j]);
-                    const index = q[y][j].indexOf(num);
-                    if (index !== -1){
-                        q[y][j].splice(index, 1); // 刪除該數字
-                        const otherPath = document.querySelector(`[data-index="${y}-${j}"]`);
-                        if (otherPath) updateColor(y, j, otherPath); // 更新顏色
-                    }else{
-                        if(!temp[`${y}-${j}`]){
-                            temp[`${y}-${j}`]={[num]:1};
-                        }
-                        else{
-                            if(temp[`${y}-${j}`][num]){
-                                temp[`${y}-${j}`][num]++;
-                            }
-                            else{
-                                temp[`${y}-${j}`][num] = 1;
-                            }
-                        }
-                    }
+                    q[y][j][num]++;
+                    updateColor(y, j, document.querySelector(`[data-index="${y}-${j}"]`)); // 更新顏色
                 }
             }
         }
 
         function resetColor(i, j, path) {
-            question--;
-            questionNumDiv.textContent = `當前設定的題目數量為${question}`;
-            if (q[i][j].length>1){
-                console.log(`error! i:${i} j:${j}`);
-                return;
-            }
+            questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
+
             const completed = [];
             const z = (i+4)%numDivisions;
-            const num = q[i][j][0];
-            let keys = [] ;
-            if (temp[`${i}-${j}`]){
-                keys = Object.keys(temp[`${i}-${j}`]);
+            const num = Q[`${i}-${j}`];
+            for (const key in q[i][j]) {
+                if (key != num) {
+                    q[i][j][key]--;
+                }
             }
-            q[i][j]=[...Array(8).keys()].map(x => x + 1).filter(item => !keys.includes(item.toString()));
+            completed.push([i,j]);
 
             updateColor(i, j, path); // 更新當前分區的顏色
             console.log(`in line 127,clear i:${i} j:${j}`);
-            const index = Q.findIndex(item => item[0]===i && item[1]===j);
-            if (index!==-1){
-                console.log(`in line 130,clear i:${i} j:${j},index:${index}`);
-                Q.splice(index,1);
-            }else{
-                console.log(`in line 132,can't find i:${i} j:${j}`);
-            }
-            completed.push([i,j]);
+            delete Q[`${i}-${j}`];
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
                 if(!completed.some(item => item[0]===i && item[1]===x)){
                     completed.push([i,x]);
-                    const stored = Boolean(temp[`${i}-${x}`] && temp[`${i}-${x}`][num]);
-                    if (stored){
-                        temp[`${i}-${x}`][num]--;
-                        if (temp[`${i}-${x}`][num]===0){
-                            delete temp[`${i}-${x}`][num];
-                        }
-                    }else{
-                        q[i][x].push(num);
-                        q[i][x].sort((a,b) => a-b);
-                        updateColor(i, x, document.querySelector(`[data-index="${i}-${x}"]`)); // 更新顏色   
-                    }
+                    q[i][x][num]--;
+                    updateColor(i, x, document.querySelector(`[data-index="${i}-${x}"]`)); // 更新顏色
                 }
             }
 
             for(let x=0;x<numCircles-1;x++){
                 if(!completed.some(item => item[0]===z && item[1]===x)){
                     completed.push([z,x]);
-                    const stored = Boolean(temp[`${z}-${x}`] && temp[`${z}-${x}`][num]);
-                    if (stored){
-                        temp[`${z}-${x}`][num]--;
-                        if (temp[`${z}-${x}`][num]===0){
-                            delete temp[`${z}-${x}`][num];
-                        }
-                    }else{
-                        q[z][x].push(num);
-                        q[z][x].sort((a,b) => a-b);
-                        updateColor(z, x, document.querySelector(`[data-index="${z}-${x}"]`)); // 更新顏色   
-                    }
+                    q[z][x][num]--;
+                    updateColor(z, x, document.querySelector(`[data-index="${z}-${x}"]`)); // 更新顏色
                 }
                 
             }
@@ -290,17 +209,8 @@
             for (let y = 0; y < numDivisions; y++) {
                 if (!completed.some(item => item[0]===y && item[1]===j)){
                     completed.push([y,j]);
-                    const stored = Boolean(temp[`${y}-${j}`] && temp[`${y}-${j}`][num]);
-                    if (stored){
-                        temp[`${y}-${j}`][num]--;
-                        if (temp[`${y}-${j}`][num]===0){
-                            delete temp[`${y}-${j}`][num];
-                        }
-                    }else{
-                        q[y][j].push(num);
-                        q[y][j].sort((a,b) => a-b);
-                        updateColor(y, j, document.querySelector(`[data-index="${y}-${j}"]`)); // 更新顏色
-                    }
+                    q[y][j][num]--;
+                    updateColor(y, j, document.querySelector(`[data-index="${y}-${j}"]`)); // 更新顏色
                 }
             }
             
@@ -372,15 +282,16 @@
                 path.setAttribute('data-index', `${i}-${ja}`);
                 path.addEventListener('click', () => {
 
-                    if(Q.some(item => item[0]===i && item[1]===ja)){
-                        const model = parseInt(prompt(`本格為固定數字（題目）:${q[i][ja][0]}\n輸入1可清除題目`));
+                    if(Q[`${i}-${ja}`]){
+                        const model = parseInt(prompt(`本格為固定數字（題目）:${Q[`${i}-${ja}`]}\n輸入1可清除題目`));
                         if (model===1){
                             resetColor(i,ja,path);
                         }
                     }else{
-                        const number = parseInt(prompt(`第${i}區第${ja}層可填入的數字為${q[i][ja]}`));
+                        const able = Object.keys(q[6][3]).filter( item => q[i][ja][item]===0);
+                        const number = parseInt(prompt(`第${i}區第${ja}層可填入的數字為${able}`));
                         if(!number) return;
-                        if (q[i][ja].includes(number)){
+                        if (able.includes(number.toString())){
                             changeColor(i, ja, number, path);
                         }else{
 
