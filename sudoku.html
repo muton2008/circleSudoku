@@ -123,8 +123,13 @@
 
         function updateColor(i, j, path) {
             const length = Object.values(q[i][j]).filter(value => value === 0).length;
-            const colorIndex = Math.min(length, colorBar.length - 1); // 避免超出顏色範圍
-            const color = colorBar[numDivisions - colorIndex];
+            let color;
+            if (length > 0){
+                const colorIndex = length; // 避免超出顏色範圍
+                color = colorBar[numDivisions - colorIndex];
+            }else{
+                color = 'rgb(32,32,128)';
+            }
             path.setAttribute('fill', color); // 更新填充顏色
         }
 
