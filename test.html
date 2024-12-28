@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<head>
+    <title>Test</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .circle-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+        .section:hover {
+            fill: #e0e0e0;
+            transition: fill 0.3s ease;
+        }
+        text {
+            font-size: 12px;
+            fill: black;
+            text-anchor: middle;
+        }
+        .info {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            width: 320px;
+            padding: 12px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: start;
+            background: #509AF8;
+            border-radius: 8px;
+            box-shadow: 0px 0px 5px -3px #111;
+
+            /* 新增固定到頁面頂部 */
+            position: fixed;
+            top: 3%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000; /* 確保在其他內容上方 */
+        }
+
+        .info__icon {
+            width: 20px;
+            height: 20px;
+            transform: translateY(-2px);
+            margin-right: 8px;
+        }
+
+        .info__icon path {
+            fill: #fff;
+        }
+
+        .info__title {
+            font-weight: 500;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .info__close {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .info__close path {
+            fill: #fff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="circle-container">
+        <svg width="100%" height="100%" viewBox="0 0 500 500" aria-label="5 concentric circles with divisions">
+            <!-- SVG content will be dynamically added here -->
+        </svg>
+    </div>
+    <div class="info">
+        <div class="info__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" height="24" fill="none"><path fill="#393a37" d="m12 1.5c-5.79844 0-10.5 4.70156-10.5 10.5 0 5.7984 4.70156 10.5 10.5 10.5 5.7984 0 10.5-4.7016 10.5-10.5 0-5.79844-4.7016-10.5-10.5-10.5zm.75 15.5625c0 .1031-.0844.1875-.1875.1875h-1.125c-.1031 0-.1875-.0844-.1875-.1875v-6.375c0-.1031.0844-.1875.1875-.1875h1.125c.1031 0 .1875.0844.1875.1875zm-.75-8.0625c-.2944-.00601-.5747-.12718-.7808-.3375-.206-.21032-.3215-.49305-.3215-.7875s.1155-.57718.3215-.7875c.2061-.21032.4864-.33149.7808-.3375.2944.00601.5747.12718.7808.3375.206.21032.3215.49305.3215.7875s-.1155.57718-.3215.7875c-.2061.21032-.4864.33149-.7808.3375z"></path></svg>
+        </div>
+        <div class="info__title" id="question-num">當前設定的題目數量為0</div>
+        <div class="info__close"><svg height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m15.8333 5.34166-1.175-1.175-4.6583 4.65834-4.65833-4.65834-1.175 1.175 4.65833 4.65834-4.65833 4.6583 1.175 1.175 4.65833-4.6583 4.6583 4.6583 1.175-1.175-4.6583-4.6583z" fill="#393a37"></path></svg></div>
+    </div>
+    <script>
+        const dbName = 'solutions';
+        const storeName = 'solutions';
+        const request = indexedDB.deleteDatabase(dbName);
+
+        request.onsuccess = () => {
+            console.log(`Database '${dbName}' deleted successfully.`);
+        };
+
+        request.onerror = (event) => {
+            console.error("Error deleting database:", event.target.error);
+        };
+
+        request.onblocked = () => {
+            console.warn("Database deletion is blocked. Close all tabs using the database.");
+        };
+
+        const svg = document.querySelector('svg');
+        const centerX = 250;
+        const centerY = 250;
+        const numCircles = 5; // Total number of circles
+        const numDivisions = 8; // Total number of divisions per circle
+
+        //read q from localstorage
+        const q = JSON.parse(localStorage.getItem('q'));
+        console.log(q);
+        const Q = JSON.parse(localStorage.getItem('Q'));
+        const questionNumDiv = document.getElementById('question-num');
+        questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
+
+        const colorBar = [];
+        for (let i=0;i<=numDivisions;i++){
+            const t = i/numDivisions;
+            const r = Math.round(255 * (1 - t)); // 紅色值，從 255 遞減到 0
+            const g = Math.round(255 * t);       // 綠色值，從 0 遞增到 255
+            const b = 0; // 藍色固定為 0
+            colorBar.push(`rgb(${r}, ${g}, ${b})`)
+        }
+
+        const stringToIndex = (str) => {
+            const [i,j] = str.split('-');
+            return [parseInt(i),parseInt(j)];
+        }
+
+        function getColor(i,j){
+            const length = Object.values(q[i][j]).filter(value => value === 0).length;
+            let color;
+            if (length > 0){
+                const colorIndex = length; // 避免超出顏色範圍
+                color = colorBar[numDivisions - colorIndex];
+            }else{
+                color = 'rgb(32,32,128)';
+            }
+            return color;
+        }
+
+        // 大寫字母標籤 (圈數)
+        const circleLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+        // 小寫字母標籤 (分區)
+        const divisionLabels = "abcdefghijklmnopqrstuvwxyz".split("");
+
+        // 創建圓
+        for (let i = 0; i < numCircles; i++) {
+            const radius = (i + 1) * 50;
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', centerX);
+            circle.setAttribute('cy', centerY);
+            circle.setAttribute('r', radius);
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', 'black');
+            svg.appendChild(circle);
+        }
+
+        // 創建分區與標籤
+        for (let i = 0; i < numDivisions; i++) {
+            const angle = (i * 360 / numDivisions);
+            const radians = angle * Math.PI / 180;
+            const x = centerX + Math.cos(radians) * 250;
+            const y = centerY + Math.sin(radians) * 250;
+
+            // 繪製分隔線 (從第二層開始)
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', centerX + Math.cos(radians) * 50);
+            line.setAttribute('y1', centerY + Math.sin(radians) * 50);
+            line.setAttribute('x2', x);
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', 'black');
+            svg.appendChild(line);
+
+            for (let j = 1; j < numCircles; j++) { // 從第二層開始 (j = 1)
+                const ja = j-1;
+                const innerRadius = j * 50;
+                const outerRadius = (j + 1) * 50;
+
+                // 計算扇形中心座標
+                const avgRadius = (innerRadius + outerRadius) / 2;
+                const avgAngle = (angle + (i + 1) * 360 / numDivisions) / 2;
+                const avgRadians = avgAngle * Math.PI / 180;
+
+                const textX = centerX + Math.cos(avgRadians) * avgRadius;
+                const textY = centerY + Math.sin(avgRadians) * avgRadius;
+
+                // 創建扇形路徑
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = [
+                    `M ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
+                    `L ${centerX + Math.cos(radians) * outerRadius} ${centerY + Math.sin(radians) * outerRadius}`,
+                    `A ${outerRadius} ${outerRadius} 0 0 1 ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius}`,
+                    `L ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius}`,
+                    `A ${innerRadius} ${innerRadius} 0 0 0 ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
+                    'Z'
+                ].join(' ');
+
+                path.setAttribute('d', d);
+                path.setAttribute('fill', getColor(i,ja));
+                path.setAttribute('stroke', 'none');
+                path.classList.add('section');
+                path.setAttribute('data-index', `${i}-${ja}`);
+
+                svg.appendChild(path);
+
+                // 添加標籤
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.textContent = Q[`${i}-${ja}`] || `${circleLabels[j - 1]}${divisionLabels[i]}\n${i} ${ja}`;
+                svg.appendChild(text);
+            }
+        }
+
+        function initializeDatabase() {
+            const request = indexedDB.open(dbName, 1); // 使用版本 1，如果不存在則會創建
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+
+                // 創建物件存儲（如果不存在）
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+                    console.log(`Object store '${storeName}' created.`);
+                }
+            };
+
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                console.log("Database initialized successfully!");
+                db.close();
+            };
+
+            request.onerror = (event) => {
+                console.error("Error initializing database:", event.target.error);
+            };
+        }
+        function addData(data) {
+            const request = indexedDB.open(dbName);
+
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                const transaction = db.transaction(storeName, "readwrite");
+                const store = transaction.objectStore(storeName);
+
+                // 不需要手動設置 id，讓 IndexedDB 自動處理
+                const record = { solution: data };
+
+                const addRequest = store.add(record);
+
+                addRequest.onsuccess = () => {
+                    console.log("Data added successfully with ID:", addRequest.result);
+                };
+
+                addRequest.onerror = (event) => {
+                    console.error("Error adding data:", event.target.error);
+                };
+
+                transaction.oncomplete = () => {
+                    db.close(); // 關閉資料庫連線
+                };
+            };
+
+            request.onerror = (event) => {
+                console.error("Error opening database:", event.target.error);
+            };
+        }
+        async function getRecordCount() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1); // 打開資料庫
+
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(storeName, "readonly");
+                    const store = transaction.objectStore(storeName);
+
+                    // 使用 count 方法計算資料數量
+                    const countRequest = store.count();
+
+                    countRequest.onsuccess = () => {
+                        resolve(countRequest.result); // 返回計算結果
+                    };
+
+                    countRequest.onerror = (event) => {
+                        console.error("Error counting records:", event.target.error);
+                        reject(event.target.error); // 拋出錯誤
+                    };
+
+                    transaction.oncomplete = () => {
+                        db.close();
+                    };
+                };
+
+                request.onerror = (event) => {
+                    console.error("Error opening database:", event.target.error);
+                    reject(event.target.error); // 拋出錯誤
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        function getSolution(id) {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName);
+
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction(storeName, "readonly");
+                    const store = transaction.objectStore(storeName);
+
+                    const getRequest = store.get(id);
+
+                    getRequest.onsuccess = (event) => {
+                        const data = event.target.result;
+                        if (data) {
+                            resolve(data); // 返回查詢的數據
+                        } else {
+                            console.log("No data found for ID:", id);
+                            resolve(null); // 如果沒有數據，返回 null
+                        }
+                    };
+
+                    getRequest.onerror = (event) => {
+                        console.error("Error retrieving data:", event.target.error);
+                        reject(event.target.error); // 拋出錯誤
+                    };
+
+                    transaction.oncomplete = () => {
+                        db.close();
+                    };
+                };
+
+                request.onerror = (event) => {
+                    console.error("Error opening database:", event.target.error);
+                    reject(event.target.error); // 拋出錯誤
+                };
+            });
+        }
+        initializeDatabase();
+        
+
+        function getBlock(){
+            const _getAbleInput = (i,j) => {
+                const ableInput = [];
+                Object.keys(q[i][j]).forEach(key => {
+                    if (q[i][j][key] === 0){
+                        ableInput.push(key);
+                    }
+                });
+                return ableInput;
+            }
+            const block = {};
+            const disableIndex = Object.keys(Q).map( key => stringToIndex(key));
+
+            for(let i=0;i<numDivisions-1;i++){
+                for(let j=0;j<numCircles-1;j++){
+                    disableIndex.some(index => {
+                        if (index[0] === i && index[1] === j){
+                            return true;
+                        }
+                    }) || (block[`${i}-${j}`] = _getAbleInput(i,j)
+                    )
+                }
+            }
+            return block;
+        }
+
+        const block = getBlock(); //for debug
+
+        function updateColor(i, j) {
+            const path = document.querySelector(`[data-index="${i}-${j}"]`);
+            path.setAttribute('fill', getColor(i,j));
+        }
+
+        function changeColor(i,j,num,q,Q){
+            if(q[i][j][num] !== 0){
+                return {success: false};
+            }
+            const z = (i+4)%numDivisions;
+            const completed = [];
+            
+            // 更新當前分區的數字
+            for (const key in q[i][j]) {
+                if (key != num) {
+                    q[i][j][key]++;
+                }
+            }
+            updateColor(i, j); // 更新當前分區的顏色
+            Q[`${i}-${j}`] = num;
+            completed.push([i,j]);
+
+            // 更新同列其他分區
+            for(let x=0;x<numCircles-1;x++){
+                if(!completed.some(item => item[0]===i && item[1]===x)){
+                    completed.push([i,x]);
+                    q[i][x][num]++;
+                    updateColor(i, x, document.querySelector(`[data-index="${i}-${x}"]`)); // 更新顏色
+                }
+            }
+
+            for(let x=0;x<numCircles-1;x++){
+                if(!completed.some(item => item[0]===z && item[1]===x)){
+                    completed.push([z,x]);
+                    q[z][x][num]++;
+                    updateColor(z, x, document.querySelector(`[data-index="${z}-${x}"]`)); // 更新顏色
+                }
+            }
+            
+            for (let y = 0; y < numDivisions; y++) {
+                if (!completed.some(item => item[0]===y && item[1]===j)){
+                    completed.push([y,j]);
+                    q[y][j][num]++;
+                    updateColor(y, j, document.querySelector(`[data-index="${y}-${j}"]`)); // 更新顏色
+                }
+            }
+
+            return {success: true};
+        }
+
+        function getResult(q) {
+            return q.map(row => 
+                row.map(cell => Object.keys(cell).find(key => cell[key] === 0))
+            );
+        }
+        
+        function* generateCombinations(obj) {
+            // 將物件的值轉為陣列
+            const arrays = Object.values(obj);
+
+            // 遞迴生成排列組合的生成器
+            function* cartesianGenerator(arrays, depth = 0, current = []) {
+                if (depth === arrays.length) {
+                    yield [...current];
+                    return;
+                }
+                for (const value of arrays[depth]) {
+                    current.push(value);
+                    yield* cartesianGenerator(arrays, depth + 1, current);
+                    current.pop();
+                }
+            }
+
+            // 開始生成排列組合
+            yield* cartesianGenerator(arrays);
+        }
+        const combinations = generateCombinations(block);
+        const indexList = Object.keys(block);
+        
+        while(true){
+            const {value, done} = combinations.next();
+            if (done) break;
+            const qc = JSON.parse(localStorage.getItem('q'));
+            const Qc = JSON.parse(localStorage.getItem('Q'));
+            const allSuccess = value.every((item,index) =>{
+                const [i,j] = stringToIndex(indexList[index]);
+                return changeColor(i,j,item,qc,Qc).success;
+            }) //等於all() in python
+
+            if(allSuccess){
+                addData(getResult(qc));
+                console.log(`qc: ${qc}`);
+            }
+        }
+        
+    </script>
+    <button onclick="window.location.href='sudoku.html'">繼續編輯題目</button>
+</body>

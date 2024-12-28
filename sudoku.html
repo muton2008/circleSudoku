@@ -91,6 +91,10 @@
         <div class="info__title" id="question-num">當前設定的題目數量為0</div>
         <div class="info__close"><svg height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m15.8333 5.34166-1.175-1.175-4.6583 4.65834-4.65833-4.65834-1.175 1.175 4.65833 4.65834-4.65833 4.6583 1.175 1.175 4.65833-4.6583 4.6583 4.6583 1.175-1.175-4.6583-4.6583z" fill="#393a37"></path></svg></div>
     </div>
+    <div>
+        <button onclick="storeAndRedirect()">生成解</button>
+        <button onclick="resetqQ()">重置題目</button>
+    </div>
 
 
     <script>
@@ -100,17 +104,19 @@
         const numCircles = 5; // Total number of circles
         const numDivisions = 8; // Total number of divisions per circle
 
-        const q = [];
-        const Q = {};   //{"i-j":num}
+        const q = JSON.parse(localStorage.getItem('q')) || [];
+        const Q = JSON.parse(localStorage.getItem('Q')) || {};   //{"i-j":num}
+        const questionNumDiv = document.getElementById('question-num');
+        questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
 
-        for (let i = 0; i < 8; i++) {
-            q.push([]); // 每層加上一個空子陣列
-            for (let j = 0; j < 4; j++) {
-                q[i].push(Object.assign({}, ...[...Array(8).keys()].map(x => ({[x + 1]: 0}))));
+        if (q.length === 0) {
+            for (let i = 0; i < 8; i++) {
+                q.push([]); // 每層加上一個空子陣列
+                for (let j = 0; j < 4; j++) {
+                    q[i].push(Object.assign({}, ...[...Array(8).keys()].map(x => ({[x + 1]: 0}))));
+                }
             }
         }
-
-        const questionNumDiv = document.getElementById('question-num');
 
         const colorBar = [];
         for (let i=0;i<=numDivisions;i++){
@@ -121,7 +127,7 @@
             colorBar.push(`rgb(${r}, ${g}, ${b})`)
         }
 
-        function updateColor(i, j, path) {
+        function getColor(i, j) {
             const length = Object.values(q[i][j]).filter(value => value === 0).length;
             let color;
             if (length > 0){
@@ -130,10 +136,13 @@
             }else{
                 color = 'rgb(32,32,128)';
             }
-            path.setAttribute('fill', color); // 更新填充顏色
+
+            return color;
         }
 
-
+        function updateColor(i,j ,path){
+            path.setAttribute('fill', getColor(i, j));
+        }
 
         function changeColor(i, j, num, path) {
             questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
@@ -281,7 +290,7 @@
                 ].join(' ');
 
                 path.setAttribute('d', d);
-                path.setAttribute('fill', colorBar[0]);
+                path.setAttribute('fill', getColor(i, ja));
                 path.setAttribute('stroke', 'none');
                 path.classList.add('section');
                 path.setAttribute('data-index', `${i}-${ja}`);
@@ -293,7 +302,7 @@
                             resetColor(i,ja,path);
                         }
                     }else{
-                        const able = Object.keys(q[6][3]).filter( item => q[i][ja][item]===0);
+                        const able = Object.keys(q[i][ja]).filter( item => q[i][ja][item]===0);
                         const number = parseInt(prompt(`第${i}區第${ja}層可填入的數字為${able}`));
                         if(!number) return;
                         if (able.includes(number.toString())){
@@ -315,6 +324,21 @@
                 text.textContent = `${circleLabels[j - 1]}${divisionLabels[i]}\n${i} ${ja}`;
                 svg.appendChild(text);
             }
+        }
+    </script>
+    <script>
+        function storeAndRedirect(){
+            // save q to localstorage
+            localStorage.setItem('q', JSON.stringify(q));
+            localStorage.setItem('Q', JSON.stringify(Q));
+            window.location.href = './test.html';
+        }
+
+        function resetqQ(){
+            const dbName = 'solutions';
+            localStorage.removeItem('q');
+            localStorage.removeItem('Q');
+            window.location.reload();
         }
     </script>
 </body>
