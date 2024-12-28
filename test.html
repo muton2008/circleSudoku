@@ -116,8 +116,7 @@
         console.log(q);
         const Q = JSON.parse(localStorage.getItem('Q'));
         const questionNumDiv = document.getElementById('question-num');
-        questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
-
+        questionNumDiv.textContent = "可行解/已測試解/總可能解";
         const colorBar = [];
         for (let i=0;i<=numDivisions;i++){
             const t = i/numDivisions;
@@ -400,7 +399,6 @@
                     q[i][j][key]++;
                 }
             }
-            updateColor(i, j,q); // 更新當前分區的顏色
             Q[`${i}-${j}`] = num;
             completed.push([i,j]);
 
@@ -409,7 +407,6 @@
                 if(!completed.some(item => item[0]===i && item[1]===x)){
                     completed.push([i,x]);
                     q[i][x][num]++;
-                    updateColor(i, x, q); // 更新顏色
                 }
             }
 
@@ -417,7 +414,6 @@
                 if(!completed.some(item => item[0]===z && item[1]===x)){
                     completed.push([z,x]);
                     q[z][x][num]++;
-                    updateColor(z, x, q); // 更新顏色
                 }
             }
             
@@ -425,7 +421,6 @@
                 if (!completed.some(item => item[0]===y && item[1]===j)){
                     completed.push([y,j]);
                     q[y][j][num]++;
-                    updateColor(y, j, q); // 更新顏色
                 }
             }
 
@@ -460,6 +455,10 @@
         }
         const combinations = generateCombinations(block);
         const indexList = Object.keys(block);
+        let possibleSolutions=1;
+        Object.keys(block).forEach(index => possibleSolutions*=block[index].length)
+        let testedSolutions = 0;
+        let successSolutions = 0;
         
         while(true){
             const {value, done} = combinations.next();
@@ -470,11 +469,12 @@
                 const [i,j] = stringToIndex(indexList[index]);
                 return changeColor(i,j,item,qc,Qc).success;
             }) //等於all() in python
-
+            testedSolutions++;
             if(allSuccess){
                 addData(getResult(qc));
-                console.log(`qc: ${qc}`);
+                successSolutions++;
             }
+            questionNumDiv.textContent = `可行解/已測試解/總可能解: ${successSolutions}/${testedSolutions}/${possibleSolutions}`;
         }
         
     </script>
