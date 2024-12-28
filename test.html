@@ -132,7 +132,7 @@
             return [parseInt(i),parseInt(j)];
         }
 
-        function getColor(i,j){
+        function getColor(i,j,q){
             const length = Object.values(q[i][j]).filter(value => value === 0).length;
             let color;
             if (length > 0){
@@ -149,74 +149,77 @@
         // 小寫字母標籤 (分區)
         const divisionLabels = "abcdefghijklmnopqrstuvwxyz".split("");
 
-        // 創建圓
-        for (let i = 0; i < numCircles; i++) {
-            const radius = (i + 1) * 50;
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', centerX);
-            circle.setAttribute('cy', centerY);
-            circle.setAttribute('r', radius);
-            circle.setAttribute('fill', 'none');
-            circle.setAttribute('stroke', 'black');
-            svg.appendChild(circle);
-        }
+        function dwarSolution(){
+            // 創建圓
+            for (let i = 0; i < numCircles; i++) {
+                const radius = (i + 1) * 50;
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', centerX);
+                circle.setAttribute('cy', centerY);
+                circle.setAttribute('r', radius);
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', 'black');
+                svg.appendChild(circle);
+            }
 
-        // 創建分區與標籤
-        for (let i = 0; i < numDivisions; i++) {
-            const angle = (i * 360 / numDivisions);
-            const radians = angle * Math.PI / 180;
-            const x = centerX + Math.cos(radians) * 250;
-            const y = centerY + Math.sin(radians) * 250;
+            // 創建分區與標籤
+            for (let i = 0; i < numDivisions; i++) {
+                const angle = (i * 360 / numDivisions);
+                const radians = angle * Math.PI / 180;
+                const x = centerX + Math.cos(radians) * 250;
+                const y = centerY + Math.sin(radians) * 250;
 
-            // 繪製分隔線 (從第二層開始)
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', centerX + Math.cos(radians) * 50);
-            line.setAttribute('y1', centerY + Math.sin(radians) * 50);
-            line.setAttribute('x2', x);
-            line.setAttribute('y2', y);
-            line.setAttribute('stroke', 'black');
-            svg.appendChild(line);
+                // 繪製分隔線 (從第二層開始)
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', centerX + Math.cos(radians) * 50);
+                line.setAttribute('y1', centerY + Math.sin(radians) * 50);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', 'black');
+                svg.appendChild(line);
 
-            for (let j = 1; j < numCircles; j++) { // 從第二層開始 (j = 1)
-                const ja = j-1;
-                const innerRadius = j * 50;
-                const outerRadius = (j + 1) * 50;
+                for (let j = 1; j < numCircles; j++) { // 從第二層開始 (j = 1)
+                    const ja = j-1;
+                    const innerRadius = j * 50;
+                    const outerRadius = (j + 1) * 50;
 
-                // 計算扇形中心座標
-                const avgRadius = (innerRadius + outerRadius) / 2;
-                const avgAngle = (angle + (i + 1) * 360 / numDivisions) / 2;
-                const avgRadians = avgAngle * Math.PI / 180;
+                    // 計算扇形中心座標
+                    const avgRadius = (innerRadius + outerRadius) / 2;
+                    const avgAngle = (angle + (i + 1) * 360 / numDivisions) / 2;
+                    const avgRadians = avgAngle * Math.PI / 180;
 
-                const textX = centerX + Math.cos(avgRadians) * avgRadius;
-                const textY = centerY + Math.sin(avgRadians) * avgRadius;
+                    const textX = centerX + Math.cos(avgRadians) * avgRadius;
+                    const textY = centerY + Math.sin(avgRadians) * avgRadius;
 
-                // 創建扇形路徑
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                const d = [
-                    `M ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
-                    `L ${centerX + Math.cos(radians) * outerRadius} ${centerY + Math.sin(radians) * outerRadius}`,
-                    `A ${outerRadius} ${outerRadius} 0 0 1 ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius}`,
-                    `L ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius}`,
-                    `A ${innerRadius} ${innerRadius} 0 0 0 ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
-                    'Z'
-                ].join(' ');
+                    // 創建扇形路徑
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const d = [
+                        `M ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
+                        `L ${centerX + Math.cos(radians) * outerRadius} ${centerY + Math.sin(radians) * outerRadius}`,
+                        `A ${outerRadius} ${outerRadius} 0 0 1 ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * outerRadius}`,
+                        `L ${centerX + Math.cos((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius} ${centerY + Math.sin((i + 1) * 360 / numDivisions * Math.PI / 180) * innerRadius}`,
+                        `A ${innerRadius} ${innerRadius} 0 0 0 ${centerX + Math.cos(radians) * innerRadius} ${centerY + Math.sin(radians) * innerRadius}`,
+                        'Z'
+                    ].join(' ');
 
-                path.setAttribute('d', d);
-                path.setAttribute('fill', getColor(i,ja));
-                path.setAttribute('stroke', 'none');
-                path.classList.add('section');
-                path.setAttribute('data-index', `${i}-${ja}`);
+                    path.setAttribute('d', d);
+                    path.setAttribute('fill', getColor(i,ja,q));
+                    path.setAttribute('stroke', 'none');
+                    path.classList.add('section');
+                    path.setAttribute('data-index', `${i}-${ja}`);
 
-                svg.appendChild(path);
+                    svg.appendChild(path);
 
-                // 添加標籤
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', textX);
-                text.setAttribute('y', textY);
-                text.textContent = Q[`${i}-${ja}`] || `${circleLabels[j - 1]}${divisionLabels[i]}\n${i} ${ja}`;
-                svg.appendChild(text);
+                    // 添加標籤
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', textX);
+                    text.setAttribute('y', textY);
+                    text.textContent = `${Q[`${i}-${ja}`] || ''}`;
+                    svg.appendChild(text);
+                }
             }
         }
+        dwarSolution();
 
         function initializeDatabase() {
             const request = indexedDB.open(dbName, 1); // 使用版本 1，如果不存在則會創建
@@ -379,9 +382,9 @@
 
         const block = getBlock(); //for debug
 
-        function updateColor(i, j) {
+        function updateColor(i, j,q) {
             const path = document.querySelector(`[data-index="${i}-${j}"]`);
-            path.setAttribute('fill', getColor(i,j));
+            path.setAttribute('fill', getColor(i,j,q));
         }
 
         function changeColor(i,j,num,q,Q){
@@ -397,7 +400,7 @@
                     q[i][j][key]++;
                 }
             }
-            updateColor(i, j); // 更新當前分區的顏色
+            updateColor(i, j,q); // 更新當前分區的顏色
             Q[`${i}-${j}`] = num;
             completed.push([i,j]);
 
@@ -406,7 +409,7 @@
                 if(!completed.some(item => item[0]===i && item[1]===x)){
                     completed.push([i,x]);
                     q[i][x][num]++;
-                    updateColor(i, x, document.querySelector(`[data-index="${i}-${x}"]`)); // 更新顏色
+                    updateColor(i, x, q); // 更新顏色
                 }
             }
 
@@ -414,7 +417,7 @@
                 if(!completed.some(item => item[0]===z && item[1]===x)){
                     completed.push([z,x]);
                     q[z][x][num]++;
-                    updateColor(z, x, document.querySelector(`[data-index="${z}-${x}"]`)); // 更新顏色
+                    updateColor(z, x, q); // 更新顏色
                 }
             }
             
@@ -422,7 +425,7 @@
                 if (!completed.some(item => item[0]===y && item[1]===j)){
                     completed.push([y,j]);
                     q[y][j][num]++;
-                    updateColor(y, j, document.querySelector(`[data-index="${y}-${j}"]`)); // 更新顏色
+                    updateColor(y, j, q); // 更新顏色
                 }
             }
 
