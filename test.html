@@ -460,21 +460,26 @@
         let testedSolutions = 0;
         let successSolutions = 0;
         
-        while(true){
-            const {value, done} = combinations.next();
-            if (done) break;
-            const qc = JSON.parse(localStorage.getItem('q'));
-            const Qc = JSON.parse(localStorage.getItem('Q'));
-            const allSuccess = value.every((item,index) =>{
-                const [i,j] = stringToIndex(indexList[index]);
-                return changeColor(i,j,item,qc,Qc).success;
-            }) //等於all() in python
-            testedSolutions++;
-            if(allSuccess){
-                addData(getResult(qc),Qc);
-                successSolutions++;
+        window.onload = async function(){
+            while(true){
+                const {value, done} = combinations.next();
+                if (done) break;
+                const qc = JSON.parse(localStorage.getItem('q'));
+                const Qc = JSON.parse(localStorage.getItem('Q'));
+                const allSuccess = value.every((item,index) =>{
+                    const [i,j] = stringToIndex(indexList[index]);
+                    return changeColor(i,j,item,qc,Qc).success;
+                }) //等於all() in python
+                testedSolutions++;
+                if(allSuccess){
+                    addData(getResult(qc),Qc);
+                    successSolutions++;
+                }
+                questionNumDiv.textContent = `可行解/已測試解/總可能解: ${successSolutions}/${testedSolutions}/${possibleSolutions}`;
+                if(testedSolutions%2500 === 0){
+                    await new Promise((resolve) => setTimeout(resolve, 0));
+                }
             }
-            questionNumDiv.textContent = `可行解/已測試解/總可能解: ${successSolutions}/${testedSolutions}/${possibleSolutions}`;
         }
         
     </script>
