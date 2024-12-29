@@ -148,7 +148,7 @@
         // 小寫字母標籤 (分區)
         const divisionLabels = "abcdefghijklmnopqrstuvwxyz".split("");
 
-        function dwarSolution(){
+        function drawSolution(q,Q) {
             // 創建圓
             for (let i = 0; i < numCircles; i++) {
                 const radius = (i + 1) * 50;
@@ -218,7 +218,7 @@
                 }
             }
         }
-        dwarSolution();
+        drawSolution(q,Q);
 
         function initializeDatabase() {
             const request = indexedDB.open(dbName, 1); // 使用版本 1，如果不存在則會創建
@@ -243,7 +243,7 @@
                 console.error("Error initializing database:", event.target.error);
             };
         }
-        function addData(data) {
+        function addData(data,Q) {
             const request = indexedDB.open(dbName);
 
             request.onsuccess = (event) => {
@@ -252,7 +252,7 @@
                 const store = transaction.objectStore(storeName);
 
                 // 不需要手動設置 id，讓 IndexedDB 自動處理
-                const record = { solution: data };
+                const record = { solution: data ,Q:Q};
 
                 const addRequest = store.add(record);
 
@@ -366,7 +366,7 @@
             const block = {};
             const disableIndex = Object.keys(Q).map( key => stringToIndex(key));
 
-            for(let i=0;i<numDivisions-1;i++){
+            for(let i=0;i<numDivisions;i++){
                 for(let j=0;j<numCircles-1;j++){
                     disableIndex.some(index => {
                         if (index[0] === i && index[1] === j){
@@ -399,7 +399,7 @@
                     q[i][j][key]++;
                 }
             }
-            Q[`${i}-${j}`] = num;
+            Q[`${i}-${j}`] = parseInt(num);
             completed.push([i,j]);
 
             // 更新同列其他分區
@@ -471,7 +471,7 @@
             }) //等於all() in python
             testedSolutions++;
             if(allSuccess){
-                addData(getResult(qc));
+                addData(getResult(qc),Qc);
                 successSolutions++;
             }
             questionNumDiv.textContent = `可行解/已測試解/總可能解: ${successSolutions}/${testedSolutions}/${possibleSolutions}`;
@@ -479,4 +479,37 @@
         
     </script>
     <button onclick="window.location.href='sudoku.html'">繼續編輯題目</button>
+    <div id="display">
+        <button id="previous" onclick="nextSolutions(-1)">上一筆數據</button>
+        <label id="solutions-id">第0筆解</label>
+        <button id="next" onclick="nextSolutions(1)">下一筆數據</button>
+    </div>
+    <script>
+        let currentSolutionsId = 0;
+        const solutionsId = document.getElementById('solutions-id');
+        async function nextSolutions(step){
+            if (currentSolutionsId + step < 0 || currentSolutionsId + step > await getRecordCount()){
+                return;
+            }
+            currentSolutionsId += step;
+            solutionsId.textContent = `第${currentSolutionsId}筆解`;
+            let data = [];
+            let Qs;
+            if(currentSolutionsId !== 0){
+                const request = (await getSolution(currentSolutionsId));
+                const solution = request.solution;
+                for (let i = 0; i < 8; i++) {
+                    data.push([]); // 每層加上一個空子陣列
+                    for (let j = 0; j < 4; j++) {
+                        data[i].push(Object.assign({}, ...[...Array(8).keys()].map(x => x+1==solution[i][j]?({[x + 1]: 0}):({[x + 1]: 3}))));
+                    }
+                }
+                Qs = request.Q;
+            }else{
+                data = q;
+                Qs = Q;
+            }
+            drawSolution(data,Qs);
+        }
+    </script>
 </body>
