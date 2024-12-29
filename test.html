@@ -3,6 +3,7 @@
     <title>Test</title>
     <style>
         body {
+            flex-direction: column; /* 讓元素垂直排列 */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -10,10 +11,11 @@
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            padding-top: 1%;
         }
         .circle-container {
             position: relative;
-            width: 500px;
+            width: 100%;
             height: 500px;
         }
         .section:hover {
@@ -25,9 +27,13 @@
             fill: black;
             text-anchor: middle;
         }
+        .generate-section {
+            margin-top: 30px; /* 讓這個區域比之前的區域更低 */
+            text-align: center;
+        }
         .info {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            width: 320px;
+            width: 600px;
             padding: 12px;
             display: flex;
             flex-direction: row;
@@ -461,6 +467,8 @@
         let successSolutions = 0;
         
         window.onload = async function(){
+            const startTime = Date.now(); // 記錄開始時間
+            const updateInterval = 2500; // 更新間隔，控制 UI 更新頻率
             while(true){
                 const {value, done} = combinations.next();
                 if (done) break;
@@ -475,16 +483,29 @@
                     addData(getResult(qc),Qc);
                     successSolutions++;
                 }
-                questionNumDiv.textContent = `可行解/已測試解/總可能解: ${successSolutions}/${testedSolutions}/${possibleSolutions}`;
-                if(testedSolutions%2500 === 0){
+                // 計算進度與剩餘時間
+                const elapsedTime = (Date.now() - startTime) / 1000; // 已用時間 (秒)
+                const estimatedTotalTime = (elapsedTime / testedSolutions) * possibleSolutions;
+                const remainingTime = estimatedTotalTime - elapsedTime;
+                questionNumDiv.innerHTML = `
+                可行解/已測試解/總可能解: ${successSolutions}/${testedSolutions}/${possibleSolutions}
+                <br />預計剩餘時間: ${formatTime(remainingTime)}`;
+                if(testedSolutions%updateInterval === 0){
                     await new Promise((resolve) => setTimeout(resolve, 0));
                 }
             }
         }
         
+        // 格式化時間為 "分鐘:秒" 格式
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${hours}小時${minutes}分${secs.toString().padStart(2, '0')}秒`;
+        }
     </script>
-    <button onclick="window.location.href='sudoku.html'">繼續編輯題目</button>
-    <div id="display">
+    <div class="generate-section" id="display">
+        <button onclick="window.location.href='sudoku.html'">繼續編輯題目</button>
         <button id="previous" onclick="nextSolutions(-1)">上一筆數據</button>
         <label id="solutions-id">第0筆解</label>
         <button id="next" onclick="nextSolutions(1)">下一筆數據</button>
