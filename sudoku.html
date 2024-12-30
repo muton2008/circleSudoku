@@ -150,7 +150,6 @@
         }
 
         function changeColor(i, j, num, path) {
-            questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
             const z = (i+4)%numDivisions;
             const completed = [];
             
@@ -163,6 +162,7 @@
             updateColor(i, j, path); // 更新當前分區的顏色
             Q[`${i}-${j}`] = num;
             completed.push([i,j]);
+            questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
@@ -191,8 +191,6 @@
         }
 
         function resetColor(i, j, path) {
-            questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
-
             const completed = [];
             const z = (i+4)%numDivisions;
             const num = Q[`${i}-${j}`];
@@ -206,6 +204,7 @@
             updateColor(i, j, path); // 更新當前分區的顏色
             console.log(`in line 127,clear i:${i} j:${j}`);
             delete Q[`${i}-${j}`];
+            questionNumDiv.textContent = `當前設定的題目數量為${Object.keys(Q).length}`;
 
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
