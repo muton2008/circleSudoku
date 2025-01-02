@@ -397,7 +397,7 @@
                 return {success: false};
             }
             const z = (i+4)%numDivisions;
-            const completed = [];
+            const completed = new Set();
             
             // 更新當前分區的數字
             for (const key in q[i][j]) {
@@ -406,28 +406,24 @@
                 }
             }
             Q[`${i}-${j}`] = parseInt(num);
-            completed.push([i,j]);
+            completed.add(`${i}-${j}`);
 
+            const updateRegion = (rowIndex, colIndex) => {
+                const regionKey = `${rowIndex}-${colIndex}`;
+                if (!completed.has(regionKey)) {
+                    completed.add(regionKey);
+                    q[rowIndex][colIndex][num]++;
+                }
+            };
+            
             // 更新同列其他分區
             for(let x=0;x<numCircles-1;x++){
-                if(!completed.some(item => item[0]===i && item[1]===x)){
-                    completed.push([i,x]);
-                    q[i][x][num]++;
-                }
+                updateRegion(i,x);
+                updateRegion(z,x);
             }
 
-            for(let x=0;x<numCircles-1;x++){
-                if(!completed.some(item => item[0]===z && item[1]===x)){
-                    completed.push([z,x]);
-                    q[z][x][num]++;
-                }
-            }
-            
             for (let y = 0; y < numDivisions; y++) {
-                if (!completed.some(item => item[0]===y && item[1]===j)){
-                    completed.push([y,j]);
-                    q[y][j][num]++;
-                }
+                updateRegion(y,j);
             }
 
             return {success: true};
@@ -468,7 +464,7 @@
         
         window.onload = async function(){
             const startTime = Date.now(); // 記錄開始時間
-            const updateInterval = 6500; // 更新間隔，控制 UI 更新頻率
+            const updateInterval = 6144; // 更新間隔，控制 UI 更新頻率
             while(true){
                 const {value, done} = combinations.next();
                 if (done) break;
